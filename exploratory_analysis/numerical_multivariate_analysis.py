@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import numpy as np
+import os
 
 
 sns.set_style("darkgrid")
@@ -58,7 +59,7 @@ def analyze():
     Main function for the analysis
     :return: Control, if the plots are rendered
     """
-    data = pd.read_csv('/Users/pv/Downloads/similar-staff-picks-challenge/similar-staff-picks-challenge-clips.csv')
+    data = pd.read_csv(os.getcwd().split('/exploratory_analysis') +'/data/similar-staff-picks-challenge-clips.csv')
     data = data[['filesize', 'duration', 'total_comments', 'total_plays', 'total_likes']]
     data = rescale(data)
     cov = data.cov()
