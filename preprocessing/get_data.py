@@ -1,3 +1,8 @@
+"""
+Helper Function for Modeling
+"""
+
+
 from utils import vimeo_api_utils
 import pandas as pd
 import os

@@ -1,3 +1,8 @@
+"""
+Helper Function for Exploratory Analysis
+"""
+
+
 from googletrans import Translator
 import pandas as pd
 import os
@@ -10,10 +15,10 @@ def clean_caption():
     Pre-processing for the text analysis
     :return: Text translated to English
     """
-    df = pd.read_csv(os.getcwd().split('/preprocessing')[0] + '/data/similar-staff-picks-challenge-clips_cleaned.csv').fillna('NA')
-    df["caption_language"] = df.apply(lambda x: translate_caption(x['caption']), axis=1)
+    df = pd.read_csv(os.getcwd().split('/preprocessing')[0] + '/data/similar-staff-picks-challenge-clips_translation.csv').fillna('NA')
+    df["caption_language"] = df.apply(lambda x: detect_caption(x['caption']), axis=1)
     df["caption_en"] = df.apply(lambda x: translate_caption(x['caption']), axis=1)
-    df["title_language"] = df.apply(lambda x: translate_caption(x['title']), axis=1)
+    df["title_language"] = df.apply(lambda x: detect_caption(x['title']), axis=1)
     df["title_en"] = df.apply(lambda x: translate_caption(x['title']), axis=1)
     df.to_csv(os.getcwd().split('/preprocessing')[0] + '/data/similar-staff-picks-challenge-clips_translation.csv')
     return df
@@ -42,6 +47,3 @@ def translate_caption(caption):
         return translator.translate(caption).text
     except:
         return caption
-
-
-clean_caption()
