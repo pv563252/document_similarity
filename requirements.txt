@@ -6,3 +6,5 @@ scikit-learn==0.19.2
 sklearn==0.0
 pycurl==7.43.0.2
 googletrans==2.3.0
+nltk==1.10.0
+tweet-preprocessor==0.5.0
