@@ -4,15 +4,17 @@ import pandas as pd
 import os
 import nltk, string
 from nltk import word_tokenize, pos_tag, ne_chunk
-from nltk.corpus import stopwords
+from sklearn.metrics import pairwise
 from nltk.tree import Tree
+import numpy as np
 nltk.download('wordnet')
 
 
-def LemTokens(tokens):
+def lemmatizer(tokens):
     """
-
-    :param tokens:
+    Full morphological analysis to accurately identify the lemma for each word
+    Capture more information about the language than a porter
+    :param tokens: List of token identified from the document
     :return:
     """
     lemmer = nltk.stem.WordNetLemmatizer()
@@ -56,49 +58,67 @@ def get_chunks(text):
     return continuous_chunk
 
 
-def LemNormalize(text):
+def normalize(text):
     """
-
-    :param text:
-    :return:
+    Normalize the documents
+    :param text: string
+    :return: tokenized vocabulary dictionary
     """
     remove_punct_dict = dict((ord(punct), None) for punct in string.punctuation)
-    return LemTokens(ie_preprocess(text.lower().translate(remove_punct_dict)))
+    return lemmatizer(nltk.word_tokenize(text.lower().translate(remove_punct_dict)))
 
 
 def get_tf_idf(documents):
     """
-
-    :param documents:
-    :return:
+    Wt,d = TFt,d log (N/DFt)
+    Ability to apply L1 and L2 norm at this step.
+    :param documents: list of string text
+    :return: tf-idf matrix
     """
-    tfidf_vectorizer = TfidfVectorizer(tokenizer=LemNormalize, stop_words='english')
+    tfidf_vectorizer = TfidfVectorizer(tokenizer=normalize, stop_words='english')
     tfidf = tfidf_vectorizer.fit_transform(documents)
-    print(type(tfidf))
     return tfidf
 
 
 def cosine_similarity(tfidf):
     """
-
-    :param tfidf:
-    :return:
+    Function to compute cosine similarity
+    :param tfidf: matrix of term frequency - inverse document frequency
+    :return: dot product of the tfidf matrix
     """
-    cosine_similarities = (tfidf * tfidf.T).toarray()
-    print(cosine_similarities)
+    # cosine_similarities = (tfidf * tfidf.T).toarray()
+    # Pair - wise cosine similaries produces the similarity between same matric if second matrix is not specified
+    cosine_similarities = pairwise.cosine_similarity(tfidf)
+    return cosine_similarities
 
 
-def compute_pairwise_cosine_similarity_with_ner():
+def compute_pairwise_cosine_similarity(df):
     """
-
-    :return:
+    Cosine Similarity for each pair of document with another.
+    :return: pairwise cosine similarity matrix.
     """
-    df = pd.read_csv(os.getcwd().split('/model')[0] + '/data/similar-staff-picks-challenge-clips-cleaned.csv')
-    df = df.fillna(0)
+    df = df.fillna('')
     df['text'] = df.apply(lambda x: str(x['title']) + ' ' + str(x['caption']) + ' ' + str(x['category_names']),
                           axis=1)
     tfidf = get_tf_idf(df['text'])
-    cosine_similarity(tfidf)
+    return cosine_similarity(tfidf)
 
 
-compute_pairwise_cosine_similarity_with_ner()
+def save_champion_lists_with_ner():
+    """
+    Compute the pairwise cosine similarity, and save the champion lists for each result
+    :return: Control, if the process executes correctly
+    """
+    df = pd.read_csv(os.getcwd().split('/model')[0] + '/data/similar-staff-picks-challenge-clips_cleaned.csv')
+    pairwise_cosine_similarity_matrix = compute_pairwise_cosine_similarity(df)
+    result = {}
+    id = 0
+    for each in pairwise_cosine_similarity_matrix:
+        result[id] = [np.argsort(each)[-11:-2]]
+        id += 1
+    result_df = pd.DataFrame.from_dict(result, orient='index', columns=["similar_clips"])
+    result_df['clip_id'] = df['id']
+    result_df.to_csv(os.getcwd().split('/model')[0] + '/data/similar-clips-cosine_with_ner.csv')
+
+
+save_champion_lists_with_ner()
