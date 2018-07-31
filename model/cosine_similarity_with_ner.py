@@ -114,7 +114,7 @@ def save_champion_lists_with_ner():
     result = {}
     id = 0
     for each in pairwise_cosine_similarity_matrix:
-        result[id] = [np.argsort(each)[-11:-2]]
+        result[id] = [np.argsort(each)[-11:-1]]
         id += 1
     result_df = pd.DataFrame.from_dict(result, orient='index', columns=["similar_clips"])
     result_df['clip_id'] = df['id']
